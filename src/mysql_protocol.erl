@@ -1172,7 +1172,7 @@ encode_param({D, {H, M, S}}) when is_float(S), S > 0.0, D < 0 ->
     Seconds = (D * 24 + H) * 3600 + M * 60 + IntS + 1,
     {D1, {M1, H1, S1}} = calendar:seconds_to_daystime(-Seconds),
     {<<?TYPE_TIME, 0>>, <<12, 1, D1:32/little, H1, M1, S1, Micro:32/little>>};
-encode_param({D, {H, M, 0.0}}) ->
+encode_param({D, {H, M, +0.0}}) ->
     encode_param({D, {H, M, 0}}).
 
 %% @doc Checks if the given Parameters can be encoded for use in the
@@ -1562,7 +1562,7 @@ encrypt_password(Password, Salt, PubKey, ServerVersion)
     end,
     %% The option rsa_pad was renamed to rsa_padding in OTP/22, but rsa_pad
     %% is being kept for backwards compatibility.
-    public_key:encrypt_public(Password2, PubKey, [{rsa_pad, RsaPadding}]);
+    public_key:sign(Password2, sha256, PubKey, [{rsa_pad, RsaPadding}]);
 encrypt_password(Password, Salt, PubKey, ServerVersion) ->
     encrypt_password(iolist_to_binary(Password), Salt, PubKey, ServerVersion).
 

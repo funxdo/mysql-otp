@@ -28,7 +28,7 @@
 
 -behaviour(gen_server).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
-         code_change/3, format_status/2]).
+         code_change/3, format_status/1]).
 
 -define(default_host, "localhost").
 -define(default_port, 3306).
@@ -849,11 +849,11 @@ demonitor_processes([{_FromPid, MRef}|T], Count) ->
     erlang:demonitor(MRef),
     demonitor_processes(T, Count - 1).
 
-format_status(normal, [_PDict, State]) ->
-	{data, [{"State", State}]};
-format_status(terminate, [_PDict, State=#state{ssl_opts=undefined}]) ->
-	{data, [{"State", State#state{password = hidden}}]};
-format_status(terminate, [_PDict, State=#state{ssl_opts=SSLOpts}]) ->
+
+format_status(Status = #{state := State = #state{ssl_opts=undefined}, reason := _}) ->
+	%% 去掉密码信息
+  Status#{state => State#state{password = hidden}};
+format_status(Status = #{state := State = #state{ssl_opts=SSLOpts}, reason := _}) ->
 	SSLOpts1 = lists:map(
 		fun
 			({cert, _}) -> {cert, hidden};
@@ -862,5 +862,7 @@ format_status(terminate, [_PDict, State=#state{ssl_opts=SSLOpts}]) ->
 			(Other) -> Other
 		end,
 		SSLOpts
-        ),
-	{data, [{"State", State#state{password = hidden, ssl_opts=SSLOpts1}}]}.
+  ),
+  Status#{state => State#state{password = hidden, ssl_opts=SSLOpts1}};
+format_status(Status) ->
+  Status.

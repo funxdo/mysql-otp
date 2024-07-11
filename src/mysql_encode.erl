@@ -56,7 +56,7 @@ encode({D, {H, M, S}}) when D < 0, is_integer(S) ->
 encode({D, {H, M, S}}) when D < 0, is_float(S) ->
     SInt = trunc(S), % trunc(57.654321) = 57
     {SInt1, Frac} = case S - SInt of % 57.6543 - 57 = 0.654321
-        0.0  -> {SInt, 0.0};
+        +0.0  -> {SInt, 0.0};
         Rest -> {SInt + 1, 1 - Rest} % {58, 0.345679}
     end,
     Sec = (D * 24 + H) * 3600 + M * 60 + SInt1,
